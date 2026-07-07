@@ -34,10 +34,7 @@ import { format } from "date-fns";
 import { useEffect, useMemo, useState } from "react";
 import { updateStudent } from "@/server/actions/student";
 import { useStudentForm } from "@/contexts/form-context";
-import {
-    type Department,
-    type Student,
-} from "@/server/db/types";
+import { type Department, type Student } from "@/server/db/types";
 import { z } from "zod";
 import { type BindingMapping } from "@/types/helper";
 
