@@ -47,7 +47,7 @@ export default function FormComponent3({ studentData }: Props) {
     // STEP
     const { setStep } = useStudentForm();
     useEffect(() => {
-        setStep(3);
+        setStep(4);
     }, [setStep]);
 
     // FORM
@@ -76,7 +76,7 @@ export default function FormComponent3({ studentData }: Props) {
             ...values,
         });
 
-        router.push("/register/onboarding/4");
+        router.push("/register/onboarding/5");
     }
 
     // HANDLERS

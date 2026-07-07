@@ -83,7 +83,7 @@ export default function FormComponent4({
     // STEP
     const { setStep } = useStudentForm();
     useEffect(() => {
-        setStep(4);
+        setStep(5);
     }, [setStep]);
 
     // FORM
@@ -195,7 +195,7 @@ export default function FormComponent4({
 
         await updateStudent(body);
 
-        router.push("/register/onboarding/5");
+        router.push("/register/onboarding/complete");
     }
 
     return (

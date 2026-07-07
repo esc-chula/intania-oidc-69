@@ -36,7 +36,7 @@ export default function FormComponent5({ studentData }: Props) {
     // STEP
     const { setStep } = useStudentForm();
     useEffect(() => {
-        setStep(5);
+        setStep(1);
     }, [setStep]);
 
     // FORM
@@ -64,7 +64,7 @@ export default function FormComponent5({ studentData }: Props) {
             id: studentData.id,
             cueaDataTransferAgreement: values.cueaDataTransferAgreement,
         });
-        router.push("/register/onboarding/complete");
+        router.push("/register/onboarding/2");
     }
 
     return (

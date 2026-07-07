@@ -83,7 +83,7 @@ export default function FormComponent2({
     // STEP
     const { setStep } = useStudentForm();
     useEffect(() => {
-        setStep(2);
+        setStep(3);
     }, [setStep]);
 
     // HANDLERS
@@ -244,7 +244,7 @@ export default function FormComponent2({
 
         await updateStudent(body);
 
-        router.push("/register/onboarding/3");
+        router.push("/register/onboarding/4");
     }
 
     const sortedProvinces = useMemo(() => {

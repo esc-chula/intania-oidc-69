@@ -45,7 +45,10 @@ use an obviously fake studentId and delete it after).
 
 - `GET /` with cookie → 307 `/profile`
 - `GET /profile` → 200, contains the studentId
-- `GET /register/onboarding/1` → 200, contains department names
+- Onboarding order is 5,1,2,3,4: `/register/onboarding/1` = PDPA consent
+  (contains `นโยบายการจัดการข้อมูลส่วนบุคคล`), `/2` = personal data
+  (contains department names), `/3` = addresses, `/4` = medical,
+  `/5` = family → submits to `/complete`
 
 To drive the `updateStudent` server action over the wire: find the action
 id in the page's JS chunk (`grep createServerReference` on
