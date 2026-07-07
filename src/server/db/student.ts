@@ -107,7 +107,9 @@ const PROTECTED_FIELDS = [
 ] as const;
 
 function toPlain(doc: Student & { _id?: unknown; __v?: unknown }): Student {
-    const { _id, __v, ...student } = doc;
+    const student = { ...doc };
+    delete student._id;
+    delete student.__v;
     return student as Student;
 }
 
