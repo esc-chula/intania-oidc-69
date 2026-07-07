@@ -10,7 +10,6 @@ import {
     FormLabel,
     FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import {
     Select,
     SelectContent,
@@ -18,37 +17,163 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { updateStudent } from "@/server/actions/student";
 import { useStudentForm } from "@/contexts/form-context";
-import type { Student } from "@/server/db/types";
+import {
+    type Country,
+    type District,
+    type Province,
+    type Religion,
+    type Student,
+} from "@/server/db/types";
+import { THAILAND_COUNTRY_ID } from "@/data/countries";
 import { z } from "zod";
+import { type BindingMapping } from "@/types/helper";
 
 const formSchema = z.object({
-    foodLimitations: z.string().max(200).optional(), // comma-sepearated string
-    drugAllergies: z.string().max(200).optional(), // comma-sepearated string
-    medicalConditions: z.string().max(200).optional(), // comma-sepearated string
-    medications: z.string().max(200).optional(), // comma-sepearated string
-    bloodType: z.enum(["A", "B", "AB", "O"]),
-    shirtSize: z.number(),
+    nationalityId: z.number(),
+    nationalId: z.string().length(13),
+    religionId: z.number(),
+    email: z.string().email().max(60),
+    phoneNumber: z
+        .string()
+        .regex(/^\d{2,3}-\d{3,4}-\d{3,4}$/)
+        .max(16),
+    lineId: z.string().max(30).optional(),
+    facebook: z.string().max(60).optional(),
+    currentAddressLatitude: z.number().optional(),
+    currentAddressLongitude: z.number().optional(),
+    currentAddressProvinceId: z.number(),
+    currentAddressDistrictId: z
+        .number()
+        .min(1, { message: "กรุณาเลือกเขต/อำเภอ" }),
+    currentAddressNumber: z.string().min(1).max(60),
+    currentAddressOther: z.string().min(1).max(400),
+    hometownAddressLongitude: z.number().optional(),
+    hometownAddressLatitude: z.number().optional(),
+    hometownAddressProvinceId: z.number().optional(),
+    hometownAddressDistrictId: z.number().optional(),
+    hometownAddressNumber: z.string().max(60).optional(),
+    hometownAddressOther: z.string().max(400).optional(),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
 
 type Props = {
     studentData: Student;
+    countries: Country[];
+    provinces: Province[];
+    districts: District[];
+    religions: Religion[];
 };
 
-export default function FormComponent3({ studentData }: Props) {
+export default function FormComponent3({
+    studentData,
+    countries,
+    provinces,
+    districts,
+    religions,
+}: Props) {
     // STEP
     const { setStep } = useStudentForm();
     useEffect(() => {
-        setStep(4);
+        setStep(3);
     }, [setStep]);
+
+    // HANDLERS
+    const [selectedCountry, setSelectedCountry] = useState(0);
+    const [selectedCurrentProvince, setSelectedCurrentProvince] = useState(0);
+    const [selectedHomeProvince, setSelectedHomeProvince] = useState(0);
+
+    const bindingMap: BindingMapping<Student, FormSchema> = useMemo(
+        () => ({
+            nationality: {
+                stateBinding: setSelectedCountry,
+                formBinding: {
+                    formKey: "nationalityId",
+                },
+                objectKey: ["id"],
+            },
+            nationalId: {
+                formBinding: {},
+            },
+            religion: {
+                formBinding: {
+                    formKey: "religionId",
+                },
+                objectKey: ["id"],
+            },
+            email: {
+                formBinding: {},
+            },
+            phoneNumber: {
+                formBinding: {},
+            },
+            facebook: {
+                formBinding: {},
+            },
+            lineId: {
+                formBinding: {},
+            },
+            currentAddressLatitude: {
+                formBinding: {},
+            },
+            currentAddressLongitude: {
+                formBinding: {},
+            },
+            currentAddressProvince: {
+                formBinding: {
+                    formKey: "currentAddressProvinceId",
+                },
+                stateBinding: setSelectedCurrentProvince,
+                objectKey: ["id"],
+            },
+            currentAddressDistrict: {
+                formBinding: {
+                    formKey: "currentAddressDistrictId",
+                },
+                objectKey: ["id"],
+            },
+            currentAddressNumber: {
+                formBinding: {},
+            },
+            currentAddressOther: {
+                formBinding: {},
+            },
+            hometownAddressLatitude: {
+                formBinding: {},
+            },
+            hometownAddressLongitude: {
+                formBinding: {},
+            },
+            hometownAddressProvince: {
+                formBinding: {
+                    formKey: "hometownAddressProvinceId",
+                },
+                stateBinding: setSelectedHomeProvince,
+                objectKey: ["id"],
+            },
+            hometownAddressDistrict: {
+                formBinding: {
+                    formKey: "hometownAddressDistrictId",
+                },
+                objectKey: ["id"],
+            },
+            hometownAddressNumber: {
+                formBinding: {},
+            },
+            hometownAddressOther: {
+                formBinding: {},
+            },
+        }),
+        [],
+    );
 
     // FORM
     const form = useForm<FormSchema>({
@@ -56,42 +181,82 @@ export default function FormComponent3({ studentData }: Props) {
         mode: "onChange",
     });
     useEffect(() => {
-        (Object.keys(studentData) as Array<keyof Student>).forEach((key) => {
-            if (key in formSchema.shape && studentData[key] != null) {
-                if (key in formSchema.shape) {
-                    form.setValue(
-                        key as keyof FormSchema,
-                        studentData[key] as never,
-                    );
-                }
+        const keys = Object.keys(studentData) as (keyof Student)[];
+        keys.forEach((key) => {
+            let value = studentData[key];
+
+            if (value === null || value === undefined) {
+                return;
+            }
+
+            const binding = bindingMap[key];
+            if (!binding) {
+                return;
+            }
+
+            if (typeof value === "object" && !Array.isArray(value)) {
+                const ok = binding.objectKey ?? [];
+                value = ok.reduce((acc, cur) => acc[cur as never], value);
+            }
+
+            if (binding.stateBinding) {
+                binding.stateBinding(value);
+            }
+            if (binding.formBinding) {
+                const k =
+                    binding.formBinding.formKey ?? (key as keyof FormSchema);
+                form.setValue(k, value as never);
             }
         });
-    }, [form, studentData]);
+    }, [form, studentData, bindingMap]);
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     async function onSubmit(values: FormSchema) {
         setLoading(true);
-        await updateStudent({
-            id: studentData.id,
-            ...values,
-        });
 
-        router.push("/register/onboarding/5");
+        const body: Student = {
+            id: studentData.id,
+            nationality: {
+                id: values.nationalityId,
+            },
+            religion: {
+                id: values.religionId,
+            },
+            currentAddressProvince: {
+                id: values.currentAddressProvinceId,
+            },
+            currentAddressDistrict: {
+                id: values.currentAddressDistrictId,
+            },
+            ...values,
+        };
+
+        if (values.hometownAddressProvinceId) {
+            body.hometownAddressProvince = {
+                id: values.hometownAddressProvinceId,
+            };
+        }
+        if (values.hometownAddressDistrictId) {
+            body.hometownAddressDistrict = {
+                id: values.hometownAddressDistrictId,
+            };
+        }
+
+        await updateStudent(body);
+
+        router.push("/register/onboarding/4");
     }
 
-    // HANDLERS
-    // TODO: put this in db?
-    const shirtSizes = [
-        { label: 'S (36")', value: 36 },
-        { label: 'M (38")', value: 38 },
-        { label: 'L (40")', value: 40 },
-        { label: 'XL (42")', value: 42 },
-        { label: '2XL (44")', value: 44 },
-        { label: '3XL (46")', value: 46 },
-        { label: '4XL (48")', value: 48 },
-        { label: '5XL (50")', value: 50 },
-        { label: '6XL (52")', value: 52 },
-    ];
+    const sortedProvinces = useMemo(() => {
+        if (!provinces) return [];
+        const bkk = provinces.find((p) => p.nameTh === "กรุงเทพมหานคร");
+        const others = provinces
+            .filter((p) => p.nameTh !== "กรุงเทพมหานคร")
+            .sort((a, b) =>
+                (a.nameTh ?? "").localeCompare(b.nameTh ?? "", "th"),
+            );
+        return bkk ? [bkk, ...others] : others;
+    }, [provinces]);
 
     return (
         <Card className="p-6 md:p-8">
@@ -100,162 +265,660 @@ export default function FormComponent3({ studentData }: Props) {
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="flex flex-col divide-y divide-muted-foreground [&>div]:py-12 [&>section]:py-12"
                 >
-                    <FormField
-                        control={form.control}
-                        name="shirtSize"
-                        render={({ field }) => (
-                            <FormItem className="!pt-0">
-                                <FormLabel>
-                                    ไซส์เสื้อ
-                                    <span className="text-red-500">*</span>
-                                </FormLabel>
-                                <Select
-                                    value={
-                                        field.value
-                                            ? field.value.toString()
-                                            : ""
-                                    }
-                                    onValueChange={(value) => {
-                                        if (!value) return;
-                                        field.onChange(parseInt(value));
-                                    }}
-                                >
-                                    <FormControl>
-                                        <SelectTrigger>
-                                            <SelectValue placeholder="เลือกไซส์เสื้อ" />
-                                        </SelectTrigger>
-                                    </FormControl>
-                                    <SelectContent>
-                                        {shirtSizes.map((size) => (
-                                            <SelectItem
-                                                key={size.value}
-                                                value={size.value.toString()}
-                                            >
-                                                {size.label}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                    <section className="flex flex-col gap-2">
+                    <section className="flex flex-col gap-2 !pt-0">
                         <FormField
                             control={form.control}
-                            name="bloodType"
+                            name="nationalityId"
                             render={({ field }) => (
-                                <FormItem>
+                                <FormItem className="!pt-0">
                                     <FormLabel>
-                                        กลุ่มเลือด
+                                        เชื้อชาติ
                                         <span className="text-red-500">*</span>
                                     </FormLabel>
                                     <Select
-                                        value={field.value}
+                                        value={
+                                            countries.find(
+                                                (country) =>
+                                                    country.id === field.value,
+                                            )?.name ?? undefined
+                                        }
                                         onValueChange={(value) => {
-                                            if (!value) return;
-                                            field.onChange(value);
+                                            const selectedCountry =
+                                                countries.find(
+                                                    (country) =>
+                                                        country.name === value,
+                                                );
+
+                                            if (!selectedCountry) {
+                                                return;
+                                            }
+
+                                            field.onChange(selectedCountry.id);
+                                            setSelectedCountry(
+                                                selectedCountry.id,
+                                            );
                                         }}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="เลือกกลุ่มเลือด" />
+                                                <SelectValue placeholder="เลือกเชื้อชาติ" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="A">A</SelectItem>
-                                            <SelectItem value="B">B</SelectItem>
-                                            <SelectItem value="O">O</SelectItem>
-                                            <SelectItem value="AB">
-                                                AB
+                                            {/* Map through nationalities data */}
+                                            {/* thailand first */}
+                                            <SelectItem
+                                                value={
+                                                    countries.find(
+                                                        (country) =>
+                                                            country.name ===
+                                                            "Thailand",
+                                                    )?.name ?? "Thailand"
+                                                }
+                                            >
+                                                {
+                                                    countries.find(
+                                                        (country) =>
+                                                            country.name ===
+                                                            "Thailand",
+                                                    )?.name
+                                                }
                                             </SelectItem>
+
+                                            {countries
+                                                .filter(
+                                                    (nationality) =>
+                                                        nationality.name !==
+                                                        "Thailand",
+                                                )
+                                                .map((nationality, index) => (
+                                                    <SelectItem
+                                                        key={index}
+                                                        value={
+                                                            nationality.name ??
+                                                            ""
+                                                        }
+                                                    >
+                                                        {nationality.name}
+                                                    </SelectItem>
+                                                ))}
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
+                        {selectedCountry === THAILAND_COUNTRY_ID && (
+                            <FormField
+                                control={form.control}
+                                name="nationalId"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            รหัสบัตรประชาชน
+                                            <span className="text-red-500">
+                                                *
+                                            </span>
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="กรอกรหัสบัตรประชาชน"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormDescription>
+                                            กรอกเฉพาะตัวเลข 13 หลักติดกัน
+                                        </FormDescription>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        )}
+
                         <FormField
                             control={form.control}
-                            name="foodLimitations"
+                            name="religionId"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>อาหารที่แพ้</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="กรอกอาหารที่แพ้"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
-                                        ,
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="drugAllergies"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>ยาที่แพ้</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="กรอกยาที่แพ้"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
-                                        ,
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="medicalConditions"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>โรคประจำตัว</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="กรอกโรคประจำตัว"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
-                                        ,
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="medications"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>ยาประจำตัว</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="กรอกยาประจำตัว"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
-                                        ,
-                                    </FormDescription>
+                                    <FormLabel>
+                                        ศาสนา
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <Select
+                                        value={
+                                            religions.find(
+                                                (religion) =>
+                                                    religion.id === field.value,
+                                            )?.nameTh ?? undefined
+                                        }
+                                        onValueChange={(value) => {
+                                            const selectedReligion =
+                                                religions.find(
+                                                    (religion) =>
+                                                        religion.nameTh ===
+                                                        value,
+                                                );
+                                            if (!selectedReligion) {
+                                                return;
+                                            }
+                                            field.onChange(
+                                                selectedReligion?.id,
+                                            );
+                                        }}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="เลือกศาสนา" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {/* Map through relegions data */}
+                                            {religions.map((religion) => (
+                                                <SelectItem
+                                                    key={religion.id}
+                                                    value={
+                                                        religion.nameTh ?? ""
+                                                    }
+                                                >
+                                                    {religion.nameTh}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
                     </section>
+                    <section className="flex flex-col gap-2">
+                        <FormField
+                            control={form.control}
+                            name="email"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        อีเมลส่วนตัว
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกอีเมลส่วนตัว"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="phoneNumber"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        เบอร์โทรศัพท์ส่วนตัว
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกเบอร์โทรศัพท์ส่วนตัว"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        กรอกในรูปแบบ 0XX-XXX-XXXX
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="facebook"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Facebook</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกชื่อโปรไฟล์ Facebook"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="lineId"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>LINE ID</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอก LINE ID"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </section>
+
+                    <section className="flex flex-col gap-2">
+                        <FormField
+                            control={form.control}
+                            name="currentAddressLatitude"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <Input type="hidden" {...field} />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="currentAddressLongitude"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <Input type="hidden" {...field} />
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="currentAddressProvinceId"
+                            render={({ field }) => (
+                                <FormItem className="!pt-0">
+                                    <FormLabel>
+                                        จังหวัดที่อยู่ปัจจุบัน
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <Select
+                                        value={
+                                            field.value
+                                                ? provinces.find(
+                                                      (province) =>
+                                                          province.id ===
+                                                          field.value,
+                                                  )?.nameTh
+                                                : undefined
+                                        }
+                                        onValueChange={(value) => {
+                                            const selectedProvinceString =
+                                                sortedProvinces.find(
+                                                    (province) =>
+                                                        province.nameTh ===
+                                                        value,
+                                                );
+                                            if (!selectedProvinceString) {
+                                                return;
+                                            }
+                                            field.onChange(
+                                                selectedProvinceString.id,
+                                            );
+                                            setSelectedCurrentProvince(
+                                                selectedProvinceString.id,
+                                            );
+                                            // Reset district when province changes
+                                            form.setValue(
+                                                "currentAddressDistrictId",
+                                                0,
+                                            ); // ใช้ 0 แทน undefined
+                                        }}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="เลือกจังหวัดที่อยู่ปัจจุบัน" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {sortedProvinces.map((province) => (
+                                                <SelectItem
+                                                    key={province.provinceCode}
+                                                    value={
+                                                        province.nameTh ?? ""
+                                                    }
+                                                >
+                                                    {province.nameTh}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="currentAddressDistrictId"
+                            render={({ field }) => (
+                                <FormItem className="!pt-0">
+                                    <FormLabel>
+                                        อำเภอ/เขตที่อยู่ปัจจุบัน
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <Select
+                                        value={
+                                            field.value
+                                                ? districts.find(
+                                                      (district) =>
+                                                          district.id ===
+                                                          field.value,
+                                                  )?.nameTh
+                                                : undefined
+                                        }
+                                        onValueChange={(value) => {
+                                            const selectedDistrict =
+                                                districts.find(
+                                                    (district) =>
+                                                        district.nameTh ===
+                                                        value,
+                                                );
+                                            if (!selectedDistrict) {
+                                                return;
+                                            }
+                                            field.onChange(selectedDistrict.id);
+                                        }}
+                                    >
+                                        <FormControl>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="เลือกเขตที่อยู่ปัจจุบัน" />
+                                            </SelectTrigger>
+                                        </FormControl>
+                                        <SelectContent>
+                                            {districts
+                                                .filter((district) => {
+                                                    const selectedCurrentProvinceCode =
+                                                        provinces.find(
+                                                            (province) =>
+                                                                province.id ===
+                                                                selectedCurrentProvince,
+                                                        )?.provinceCode;
+                                                    return (
+                                                        district.provinceCode ===
+                                                        selectedCurrentProvinceCode
+                                                    );
+                                                })
+                                                .map((district) => (
+                                                    <SelectItem
+                                                        key={
+                                                            district.districtCode
+                                                        }
+                                                        value={
+                                                            district.nameTh ??
+                                                            ""
+                                                        }
+                                                    >
+                                                        {district.nameTh}
+                                                    </SelectItem>
+                                                ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="currentAddressNumber"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        เลขที่
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกเลขที่"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        <FormField
+                            control={form.control}
+                            name="currentAddressOther"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>
+                                        ที่อยู่ปัจจุบัน
+                                        <span className="text-red-500">*</span>
+                                    </FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกที่อยู่ปัจจุบัน (หมู่บ้าน/ซอย/ถนน/ตำบล)"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </section>
+
+                    {selectedCountry === THAILAND_COUNTRY_ID ? ( // Thailand
+                        <section className="flex flex-col gap-2">
+                            <FormField
+                                control={form.control}
+                                name="hometownAddressLatitude"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Input type="hidden" {...field} />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                            <FormField
+                                control={form.control}
+                                name="hometownAddressLongitude"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <Input type="hidden" {...field} />
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="hometownAddressProvinceId"
+                                render={({ field }) => (
+                                    <FormItem className="!pt-0">
+                                        <FormLabel>
+                                            จังหวัดที่อยู่ตามบัตรประชาชน
+                                        </FormLabel>
+                                        <Select
+                                            value={
+                                                field.value
+                                                    ? provinces.find(
+                                                          (province) =>
+                                                              province.id ===
+                                                              field.value,
+                                                      )?.nameTh
+                                                    : undefined
+                                            }
+                                            onValueChange={(value) => {
+                                                const selectedProvinceString =
+                                                    provinces.find(
+                                                        (province) =>
+                                                            province.nameTh ===
+                                                            value,
+                                                    );
+
+                                                if (!selectedProvinceString) {
+                                                    return;
+                                                }
+
+                                                field.onChange(
+                                                    selectedProvinceString?.id,
+                                                );
+                                                setSelectedHomeProvince(
+                                                    selectedProvinceString?.id,
+                                                );
+                                            }}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="เลือกจังหวัดที่อยู่ตามบัตรประชาชน" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {/* Map through provinces data */}
+                                                {sortedProvinces.map(
+                                                    (province) => (
+                                                        <SelectItem
+                                                            key={
+                                                                province.provinceCode
+                                                            }
+                                                            value={
+                                                                province.nameTh ??
+                                                                ""
+                                                            }
+                                                        >
+                                                            {province.nameTh}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="hometownAddressDistrictId"
+                                render={({ field }) => (
+                                    <FormItem className="!pt-0">
+                                        <FormLabel>
+                                            เขตที่อยู่ตามบัตรประชาชน
+                                        </FormLabel>
+                                        <Select
+                                            value={
+                                                field.value
+                                                    ? districts.find(
+                                                          (district) =>
+                                                              district.id ===
+                                                              field.value,
+                                                      )?.nameTh
+                                                    : undefined
+                                            }
+                                            onValueChange={(value) => {
+                                                const selectedDistrict =
+                                                    districts.find(
+                                                        (district) =>
+                                                            district.nameTh ===
+                                                            value,
+                                                    );
+                                                field.onChange(
+                                                    selectedDistrict?.id,
+                                                );
+                                            }}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="เลือกเขตที่อยู่ตามบัตรประชาชน" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {districts
+                                                    .filter((district) => {
+                                                        const selectedHomeProvinceCode =
+                                                            provinces.find(
+                                                                (province) =>
+                                                                    province.id ===
+                                                                    selectedHomeProvince,
+                                                            )?.provinceCode;
+                                                        return (
+                                                            district.provinceCode ===
+                                                            selectedHomeProvinceCode
+                                                        );
+                                                    })
+                                                    .map((district) => (
+                                                        <SelectItem
+                                                            key={
+                                                                district.districtCode
+                                                            }
+                                                            value={
+                                                                district.nameTh ??
+                                                                ""
+                                                            }
+                                                        >
+                                                            {district.nameTh}
+                                                        </SelectItem>
+                                                    ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="hometownAddressNumber"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>เลขที่</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="กรอกเลขที่"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="hometownAddressOther"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>
+                                            ที่อยู่ตามบัตรประชาชน
+                                        </FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                placeholder="กรอกที่อยู่ตามบัตรประชาชน (หมู่บ้าน/ซอย/ถนน/ตำบล)"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+                        </section>
+                    ) : (
+                        <FormField
+                            control={form.control}
+                            name="hometownAddressOther"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>ที่อยู่ตามบัตรประชาชน</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกที่อยู่ตามบัตรประชาชน"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    )}
+
                     <Button
                         type="submit"
                         className="self-end"

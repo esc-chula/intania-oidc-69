@@ -21,69 +21,33 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { useEffect, useMemo, useState } from "react";
-import {
-    Popover,
-    PopoverContent,
-    PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { Check, ChevronsUpDown } from "lucide-react";
-import {
-    Command,
-    CommandEmpty,
-    CommandGroup,
-    CommandInput,
-    CommandItem,
-    CommandList,
-} from "@/components/ui/command";
+import { useEffect, useState } from "react";
 import { updateStudent } from "@/server/actions/student";
 import { useStudentForm } from "@/contexts/form-context";
-import type {
-    FamilyMemberStatus,
-    FamilyStatus,
-    Student,
-} from "@/server/db/types";
-import { type BindingMapping } from "@/types/helper";
+import type { Student } from "@/server/db/types";
+import { z } from "zod";
 
 const formSchema = z.object({
-    fatherName: z.string().max(150),
-    fatherBirthYear: z.number(),
-    fatherStatusId: z.number().optional(),
-
-    motherName: z.string().max(150),
-    motherBirthYear: z.number(),
-    motherStatusId: z.number().optional(),
-
-    familyStatusId: z.number(),
-
-    parent: z.enum(["Father", "Mother", "Other"]),
-    parentPhoneNumber: z.string().regex(/^\d{2,3}-\d{3,4}-\d{3,4}$/),
-    parentAddress: z.string().max(400).optional(),
-
-    siblingTotal: z.number(),
-    siblingOrder: z.number(),
+    foodLimitations: z.string().max(200).optional(), // comma-sepearated string
+    drugAllergies: z.string().max(200).optional(), // comma-sepearated string
+    medicalConditions: z.string().max(200).optional(), // comma-sepearated string
+    medications: z.string().max(200).optional(), // comma-sepearated string
+    bloodType: z.enum(["A", "B", "AB", "O"]),
+    shirtSize: z.number(),
 });
 
 type FormSchema = z.infer<typeof formSchema>;
 
 type Props = {
     studentData: Student;
-    familyStatuses: FamilyStatus[];
-    familyMemberStatuses: FamilyMemberStatus[];
 };
 
-export default function FormComponent4({
-    studentData,
-    familyStatuses,
-    familyMemberStatuses,
-}: Props) {
+export default function FormComponent4({ studentData }: Props) {
     // STEP
     const { setStep } = useStudentForm();
     useEffect(() => {
-        setStep(5);
+        setStep(4);
     }, [setStep]);
 
     // FORM
@@ -91,112 +55,43 @@ export default function FormComponent4({
         resolver: zodResolver(formSchema),
         mode: "onChange",
     });
-
-    const bindingMap: BindingMapping<Student, FormSchema> = useMemo(
-        () => ({
-            fatherName: {
-                formBinding: {},
-            },
-            fatherBirthYear: {
-                formBinding: {},
-            },
-            fatherStatus: {
-                formBinding: {
-                    formKey: "fatherStatusId",
-                },
-                objectKey: ["id"],
-            },
-            motherName: {
-                formBinding: {},
-            },
-            motherBirthYear: {
-                formBinding: {},
-            },
-            motherStatus: {
-                formBinding: {
-                    formKey: "motherStatusId",
-                },
-                objectKey: ["id"],
-            },
-            familyStatus: {
-                formBinding: {
-                    formKey: "familyStatusId",
-                },
-                objectKey: ["id"],
-            },
-            siblingOrder: {
-                formBinding: {},
-            },
-            siblingTotal: {
-                formBinding: {},
-            },
-            parent: {
-                formBinding: {},
-            },
-            parentPhoneNumber: {
-                formBinding: {},
-            },
-        }),
-        [],
-    );
-
     useEffect(() => {
-        const keys = Object.keys(studentData) as (keyof Student)[];
-        keys.forEach((key) => {
-            let value = studentData[key];
-
-            if (value === null || value === undefined) {
-                return;
-            }
-
-            const binding = bindingMap[key];
-            if (!binding) {
-                return;
-            }
-
-            if (typeof value === "object" && !Array.isArray(value)) {
-                const ok = binding.objectKey ?? [];
-                value = ok.reduce((acc, cur) => acc[cur as never], value);
-            }
-
-            if (binding.stateBinding) {
-                binding.stateBinding(value);
-            }
-            if (binding.formBinding) {
-                const k =
-                    binding.formBinding.formKey ?? (key as keyof FormSchema);
-                form.setValue(k, value as never);
+        (Object.keys(studentData) as Array<keyof Student>).forEach((key) => {
+            if (key in formSchema.shape && studentData[key] != null) {
+                if (key in formSchema.shape) {
+                    form.setValue(
+                        key as keyof FormSchema,
+                        studentData[key] as never,
+                    );
+                }
             }
         });
-    }, [form, studentData, bindingMap]);
+    }, [form, studentData]);
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     async function onSubmit(values: FormSchema) {
         setLoading(true);
-
-        const body: Student = {
+        await updateStudent({
             id: studentData.id,
-            familyStatus: {
-                id: values.familyStatusId,
-            },
             ...values,
-        };
+        });
 
-        if (values.fatherStatusId) {
-            body.fatherStatus = {
-                id: values.fatherStatusId,
-            };
-        }
-        if (values.motherStatusId) {
-            body.motherStatus = {
-                id: values.motherStatusId,
-            };
-        }
-
-        await updateStudent(body);
-
-        router.push("/register/onboarding/complete");
+        router.push("/register/onboarding/5");
     }
+
+    // HANDLERS
+    // TODO: put this in db?
+    const shirtSizes = [
+        { label: 'S (36")', value: 36 },
+        { label: 'M (38")', value: 38 },
+        { label: 'L (40")', value: 40 },
+        { label: 'XL (42")', value: 42 },
+        { label: '2XL (44")', value: 44 },
+        { label: '3XL (46")', value: 46 },
+        { label: '4XL (48")', value: 48 },
+        { label: '5XL (50")', value: 50 },
+        { label: '6XL (52")', value: 52 },
+    ];
 
     return (
         <Card className="p-6 md:p-8">
@@ -205,456 +100,96 @@ export default function FormComponent4({
                     onSubmit={form.handleSubmit(onSubmit)}
                     className="flex flex-col divide-y divide-muted-foreground [&>div]:py-12 [&>section]:py-12"
                 >
-                    <section className="flex flex-col gap-2 !pt-0">
-                        <FormField
-                            control={form.control}
-                            name="fatherName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        ชื่อจริง-นามสกุล บิดา
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
+                    <FormField
+                        control={form.control}
+                        name="shirtSize"
+                        render={({ field }) => (
+                            <FormItem className="!pt-0">
+                                <FormLabel>
+                                    ไซส์เสื้อ
+                                    <span className="text-red-500">*</span>
+                                </FormLabel>
+                                <Select
+                                    value={
+                                        field.value
+                                            ? field.value.toString()
+                                            : ""
+                                    }
+                                    onValueChange={(value) => {
+                                        if (!value) return;
+                                        field.onChange(parseInt(value));
+                                    }}
+                                >
                                     <FormControl>
-                                        <Input
-                                            placeholder="กรอกชื่อจริง-นามสกุล บิดา"
-                                            {...field}
-                                        />
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="เลือกไซส์เสื้อ" />
+                                        </SelectTrigger>
                                     </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="fatherBirthYear"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col pt-2">
-                                    <FormLabel>
-                                        ปีเกิดบิดา
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    className={cn(
-                                                        "justify-between",
-                                                        !field.value &&
-                                                            "text-muted-foreground",
-                                                    )}
-                                                >
-                                                    {field.value
-                                                        ? field.value
-                                                        : "เลือกปีเกิดบิดา"}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[200px] p-0">
-                                            <Command>
-                                                <CommandInput placeholder="เลือกปีเกิดบิดา" />
-                                                <CommandEmpty>
-                                                    กรุณาติดต่อทีมงาน
-                                                </CommandEmpty>
-                                                <CommandGroup>
-                                                    <CommandList>
-                                                        {Array.from(
-                                                            { length: 100 },
-                                                            (_, i) =>
-                                                                new Date().getFullYear() -
-                                                                99 +
-                                                                i,
-                                                        ).map((year) => (
-                                                            <CommandItem
-                                                                value={year.toString()}
-                                                                key={year}
-                                                                onSelect={() => {
-                                                                    form.setValue(
-                                                                        "fatherBirthYear",
-                                                                        year,
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <Check
-                                                                    className={cn(
-                                                                        "mr-2 h-4 w-4",
-                                                                        year ===
-                                                                            field.value
-                                                                            ? "opacity-100"
-                                                                            : "opacity-0",
-                                                                    )}
-                                                                />
-                                                                {year}
-                                                            </CommandItem>
-                                                        ))}
-                                                    </CommandList>
-                                                </CommandGroup>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormDescription>
-                                        ปีคริสต์ศักราช
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="fatherStatusId"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        สถานะบิดา
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <Select
-                                        value={
-                                            field.value
-                                                ? field.value.toString()
-                                                : undefined
-                                        }
-                                        onValueChange={(value) => {
-                                            if (!value) {
-                                                return;
-                                            }
-                                            field.onChange(parseInt(value));
-                                        }}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="เลือกสถานะบิดา" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {familyMemberStatuses.map(
-                                                (status) => (
-                                                    <SelectItem
-                                                        value={status.id.toString()}
-                                                        key={status.id}
-                                                    >
-                                                        {status.valueTh}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </section>
+                                    <SelectContent>
+                                        {shirtSizes.map((size) => (
+                                            <SelectItem
+                                                key={size.value}
+                                                value={size.value.toString()}
+                                            >
+                                                {size.label}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                            </FormItem>
+                        )}
+                    />
                     <section className="flex flex-col gap-2">
                         <FormField
                             control={form.control}
-                            name="motherName"
+                            name="bloodType"
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>
-                                        ชื่อจริง-นามสกุล มารดา
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="กรอกชื่อจริง-นามสกุล มารดา"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="motherBirthYear"
-                            render={({ field }) => (
-                                <FormItem className="flex flex-col pt-2">
-                                    <FormLabel>
-                                        ปีเกิดมารดา
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <Popover>
-                                        <PopoverTrigger asChild>
-                                            <FormControl>
-                                                <Button
-                                                    variant="outline"
-                                                    role="combobox"
-                                                    className={cn(
-                                                        "justify-between",
-                                                        !field.value &&
-                                                            "text-muted-foreground",
-                                                    )}
-                                                >
-                                                    {field.value
-                                                        ? field.value
-                                                        : "เลือกปีเกิดมารดา"}
-                                                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                                                </Button>
-                                            </FormControl>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-[200px] p-0">
-                                            <Command>
-                                                <CommandInput placeholder="เลือกปีเกิดมารดา" />
-                                                <CommandEmpty>
-                                                    กรุณาติดต่อทีมงาน
-                                                </CommandEmpty>
-                                                <CommandGroup>
-                                                    <CommandList>
-                                                        {Array.from(
-                                                            { length: 100 },
-                                                            (_, i) =>
-                                                                new Date().getFullYear() -
-                                                                99 +
-                                                                i,
-                                                        ).map((year) => (
-                                                            <CommandItem
-                                                                value={year.toString()}
-                                                                key={year}
-                                                                onSelect={() => {
-                                                                    form.setValue(
-                                                                        "motherBirthYear",
-                                                                        year,
-                                                                    );
-                                                                }}
-                                                            >
-                                                                <Check
-                                                                    className={cn(
-                                                                        "mr-2 h-4 w-4",
-                                                                        year ===
-                                                                            field.value
-                                                                            ? "opacity-100"
-                                                                            : "opacity-0",
-                                                                    )}
-                                                                />
-                                                                {year}
-                                                            </CommandItem>
-                                                        ))}
-                                                    </CommandList>
-                                                </CommandGroup>
-                                            </Command>
-                                        </PopoverContent>
-                                    </Popover>
-                                    <FormDescription>
-                                        ปีคริสต์ศักราช
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="motherStatusId"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        สถานะมารดา
+                                        กลุ่มเลือด
                                         <span className="text-red-500">*</span>
                                     </FormLabel>
                                     <Select
-                                        value={
-                                            field.value
-                                                ? field.value.toString()
-                                                : undefined
-                                        }
+                                        value={field.value}
                                         onValueChange={(value) => {
-                                            if (!value) {
-                                                return;
-                                            }
-                                            field.onChange(parseInt(value));
-                                        }}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="เลือกสถานะมารดา" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {familyMemberStatuses.map(
-                                                (status) => (
-                                                    <SelectItem
-                                                        value={status.id.toString()}
-                                                        key={status.id}
-                                                    >
-                                                        {status.valueTh}
-                                                    </SelectItem>
-                                                ),
-                                            )}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </section>
-                    <section className="flex flex-col gap-2">
-                        <FormField
-                            control={form.control}
-                            name="familyStatusId"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        สถานะครอบครัว
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <Select
-                                        value={
-                                            field.value
-                                                ? field.value.toString()
-                                                : undefined
-                                        }
-                                        onValueChange={(value) => {
-                                            if (!value) {
-                                                return;
-                                            }
-                                            field.onChange(parseInt(value));
-                                        }}
-                                    >
-                                        <FormControl>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="เลือกสถานะครอบครัว" />
-                                            </SelectTrigger>
-                                        </FormControl>
-                                        <SelectContent>
-                                            {familyStatuses.map((status) => (
-                                                <SelectItem
-                                                    value={status.id.toString()}
-                                                    key={status.id}
-                                                >
-                                                    {status.valueTh}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="siblingTotal"
-                            render={({ field }) => {
-                                return (
-                                    <FormItem>
-                                        <FormLabel>
-                                            จำนวนพี่น้อง
-                                            <span className="text-red-500">
-                                                *
-                                            </span>
-                                        </FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="กรอกจำนวนพี่น้อง"
-                                                value={field.value}
-                                                onChange={(e) => {
-                                                    const value = parseInt(
-                                                        e.target.value,
-                                                    );
-                                                    field.onChange(
-                                                        isNaN(value)
-                                                            ? undefined
-                                                            : value,
-                                                    );
-                                                }}
-                                                name={field.name}
-                                                disabled={field.disabled}
-                                                onBlur={field.onBlur}
-                                                ref={field.ref}
-                                            />
-                                        </FormControl>
-                                        <FormDescription>
-                                            กรอกตัวเลขจำนวนพี่น้องทั้งหมด
-                                            (หากมีเพียงคนเดียวให้กรอก 1)
-                                        </FormDescription>
-                                        <FormMessage />
-                                    </FormItem>
-                                );
-                            }}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="siblingOrder"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        ลำดับพี่น้อง
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="กรอกลำดับพี่น้อง"
-                                            value={field.value}
-                                            onChange={(e) => {
-                                                const value = parseInt(
-                                                    e.target.value,
-                                                );
-                                                field.onChange(
-                                                    isNaN(value)
-                                                        ? undefined
-                                                        : value,
-                                                );
-                                            }}
-                                            name={field.name}
-                                            disabled={field.disabled}
-                                            onBlur={field.onBlur}
-                                            ref={field.ref}
-                                        />
-                                    </FormControl>
-                                    <FormDescription>
-                                        ลำดับพี่น้องของตัวเอง (1 = เกิดคนแรก)
-                                    </FormDescription>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                    </section>
-                    <section className="flex flex-col gap-2">
-                        <h3 className="font-bold text-neutral-700">
-                            ข้อมูลติดต่อฉุกเฉิน
-                        </h3>
-                        <FormField
-                            control={form.control}
-                            name="parent"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>
-                                        ผู้ปกครอง
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
-                                    <Select
-                                        value={
-                                            field.value
-                                                ? field.value
-                                                : undefined
-                                        }
-                                        onValueChange={(value) => {
-                                            if (!value) {
-                                                return;
-                                            }
+                                            if (!value) return;
                                             field.onChange(value);
                                         }}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="เลือกผู้ปกครอง" />
+                                                <SelectValue placeholder="เลือกกลุ่มเลือด" />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="Father">
-                                                บิดา
-                                            </SelectItem>
-                                            <SelectItem value="Mother">
-                                                มารดา
-                                            </SelectItem>
-                                            <SelectItem value="Other">
-                                                อื่น ๆ
+                                            <SelectItem value="A">A</SelectItem>
+                                            <SelectItem value="B">B</SelectItem>
+                                            <SelectItem value="O">O</SelectItem>
+                                            <SelectItem value="AB">
+                                                AB
                                             </SelectItem>
                                         </SelectContent>
                                     </Select>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="foodLimitations"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>อาหารที่แพ้</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกอาหารที่แพ้"
+                                            {...field}
+                                        />
+                                    </FormControl>
                                     <FormDescription>
-                                        หรือผู้ที่สามารถติดต่อฉุกเฉินได้
+                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
+                                        ,
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
@@ -662,21 +197,59 @@ export default function FormComponent4({
                         />
                         <FormField
                             control={form.control}
-                            name="parentPhoneNumber"
+                            name="drugAllergies"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>
-                                        เบอร์โทรศัพท์ผู้ปกครอง
-                                        <span className="text-red-500">*</span>
-                                    </FormLabel>
+                                    <FormLabel>ยาที่แพ้</FormLabel>
                                     <FormControl>
                                         <Input
-                                            placeholder="กรอกเบอร์โทรศัพท์ผู้ปกครอง"
+                                            placeholder="กรอกยาที่แพ้"
                                             {...field}
                                         />
                                     </FormControl>
                                     <FormDescription>
-                                        กรอกในรูปแบบ 0XX-XXX-XXXX
+                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
+                                        ,
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="medicalConditions"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>โรคประจำตัว</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกโรคประจำตัว"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
+                                        ,
+                                    </FormDescription>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={form.control}
+                            name="medications"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>ยาประจำตัว</FormLabel>
+                                    <FormControl>
+                                        <Input
+                                            placeholder="กรอกยาประจำตัว"
+                                            {...field}
+                                        />
+                                    </FormControl>
+                                    <FormDescription>
+                                        หากมีหลายรายการ กรุณาคั่นด้วยเครื่องหมาย
+                                        ,
                                     </FormDescription>
                                     <FormMessage />
                                 </FormItem>
