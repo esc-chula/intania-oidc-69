@@ -3,7 +3,7 @@
 import { signIn, signOut } from "@/server/auth";
 
 export async function signInWithGoogle(): Promise<void> {
-    await signIn("google", { redirectTo: "/profile" });
+    await signIn("google", { redirectTo: "/post-login" });
 }
 
 export async function logout(): Promise<void> {
