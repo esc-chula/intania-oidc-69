@@ -37,7 +37,7 @@ import { useStudentForm } from "@/contexts/form-context";
 import {
     type Department,
     type Student,
-} from "@/generated/intania/auth/student/v1/student";
+} from "@/server/db/types";
 import { z } from "zod";
 import { type BindingMapping } from "@/types/helper";
 

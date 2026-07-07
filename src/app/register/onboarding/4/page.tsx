@@ -1,37 +1,13 @@
-import { redirect } from "next/navigation";
 import FormComponent4 from "@/components/register/4-form";
-import { cookies } from "next/headers";
-import { me } from "@/server/controller/auth";
-import { getCachedMapping } from "@/server/data/mapper";
+import { familyMemberStatuses, familyStatuses } from "@/data";
+import { requireStudent } from "@/server/require-student";
 
 export default async function Page() {
-    const sessionId = cookies().get("sid")?.value;
-    if (!sessionId) return redirect("/logout");
-
-    const meResponse = await me(sessionId);
-
-    if (!meResponse.success) {
-        const errors = meResponse.errors;
-        throw new Error(errors.join(", "));
-    }
-
-    const meData = meResponse.data;
-
-    if (!meData.student || !meData.account?.publicId) {
-        throw new Error("Something went wrong");
-    }
-
-    const miscData = await getCachedMapping([
-        "familyMemberStatuses",
-        "familyStatuses",
-    ]);
-
-    const familyStatuses = miscData.familyStatuses;
-    const familyMemberStatuses = miscData.familyMemberStatuses;
+    const studentData = await requireStudent();
 
     return (
         <FormComponent4
-            studentData={meData.student}
+            studentData={studentData}
             familyStatuses={familyStatuses}
             familyMemberStatuses={familyMemberStatuses}
         />

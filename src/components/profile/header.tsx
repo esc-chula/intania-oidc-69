@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useProfile } from "@/contexts/profile-context";
-import { type Student } from "@/generated/intania/auth/student/v1/student";
+import { type Student } from "@/server/db/types";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 
