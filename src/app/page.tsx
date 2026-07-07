@@ -1,54 +1,35 @@
 import LoginBox from "@/components/login/login-box";
 import LoginFooter from "@/components/login/login-footer";
-import { env } from "next-runtime-env";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { auth } from "@/server/auth";
+
+const ERROR_MESSAGES: Record<string, string> = {
+    AccessDenied: "กรุณาเข้าสู่ระบบด้วยอีเมลนิสิตจุฬาฯ (@student.chula.ac.th)",
+};
+
+const DEFAULT_ERROR_MESSAGE =
+    "เกิดข้อผิดพลาดในการเข้าสู่ระบบ กรุณาลองใหม่อีกครั้ง";
 
 export default async function Page({
     searchParams,
 }: {
-    searchParams: { redirect: string };
+    searchParams: { error?: string };
 }) {
-    const cookieStore = cookies();
-    const sid = cookieStore.get("sid");
-    const redirectUrl = searchParams.redirect;
-
-    if (sid) {
-        if (validateRedirectUrl(redirectUrl)) {
-            redirect(redirectUrl);
-        } else {
-            redirect("/profile");
-        }
+    const session = await auth();
+    if (session?.user?.studentId) {
+        redirect("/profile");
     }
+
+    const errorMessage = searchParams.error
+        ? (ERROR_MESSAGES[searchParams.error] ?? DEFAULT_ERROR_MESSAGE)
+        : null;
 
     return (
         <div className="flex size-full flex-col items-center">
             <div className="absolute top-1/2 flex size-full max-w-3xl -translate-y-1/2 flex-col items-center justify-between md:h-auto md:justify-center md:px-32 lg:max-w-6xl">
-                <LoginBox />
+                <LoginBox errorMessage={errorMessage} />
                 <LoginFooter />
             </div>
         </div>
     );
-}
-
-function validateRedirectUrl(redirectUrl: string | null): boolean {
-    if (!redirectUrl) return false;
-
-    const allowedUrls = env("ALLOW_REDIRECT_URLS")?.split(",") ?? [];
-    try {
-        const url = new URL(redirectUrl);
-
-        const isValid = allowedUrls.some((allowedUrl) => {
-            const allowed = new URL(allowedUrl);
-            return (
-                url.protocol === allowed.protocol &&
-                url.hostname === allowed.hostname &&
-                (!allowed.port || url.port === allowed.port)
-            );
-        });
-
-        return isValid;
-    } catch (e) {
-        return false;
-    }
 }

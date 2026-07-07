@@ -1,14 +1,16 @@
 import StudentFormContextProvider from "@/contexts/form-context";
 import Transition from "./template";
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import Header from "@/components/register/header";
+import { auth } from "@/server/auth";
 
-export default function Layout({ children }: { children: React.ReactNode }) {
-    const cookieStore = cookies();
-    const sid = cookieStore.get("sid");
-
-    if (!sid) {
+export default async function Layout({
+    children,
+}: {
+    children: React.ReactNode;
+}) {
+    const session = await auth();
+    if (!session?.user?.studentId) {
         redirect("/");
     }
 

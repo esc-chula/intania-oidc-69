@@ -1,11 +1,11 @@
 "use client";
 
-import { logoutStudent } from "@/server/actions/student";
+import { logout } from "@/server/actions/auth";
 import { useEffect } from "react";
 
 export default function Logout() {
     useEffect(() => {
-        logoutStudent().catch(console.error);
+        logout().catch(console.error);
     }, []);
 
     return null;
