@@ -58,7 +58,7 @@ Google OAuth (sign-in), MongoDB Atlas (data), Vercel (hosting + deploys).
   Rejected users return to the login page with a Thai error message
   ("กรุณาเข้าสู่ระบบด้วยอีเมลนิสิตจุฬาฯ").
 - **Student ID** is derived in the JWT callback from the email prefix
-  (`6538xxxxxx@student.chula.ac.th` → `6538xxxxxx`) and stored in the session
+  (`693xxxxx21@student.chula.ac.th` → `693xxxxx21`) and stored in the session
   token. The form's student ID field becomes read-only/prefilled.
 - **Sessions:** JWT strategy (encrypted cookie). No session collection in
   MongoDB; suits serverless. The `sid` cookie logic disappears.
