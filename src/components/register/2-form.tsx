@@ -31,7 +31,8 @@ import {
     type Province,
     type Religion,
     type Student,
-} from "@/generated/intania/auth/student/v1/student";
+} from "@/server/db/types";
+import { THAILAND_COUNTRY_ID } from "@/data/countries";
 import { z } from "zod";
 import { type BindingMapping } from "@/types/helper";
 
@@ -347,7 +348,7 @@ export default function FormComponent2({
                                 </FormItem>
                             )}
                         />
-                        {selectedCountry === 221 && (
+                        {selectedCountry === THAILAND_COUNTRY_ID && (
                             <FormField
                                 control={form.control}
                                 name="nationalId"
@@ -704,7 +705,7 @@ export default function FormComponent2({
                         />
                     </section>
 
-                    {selectedCountry === 221 ? ( // Thailand
+                    {selectedCountry === THAILAND_COUNTRY_ID ? ( // Thailand
                         <section className="flex flex-col gap-2">
                             <FormField
                                 control={form.control}

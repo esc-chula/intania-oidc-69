@@ -19,7 +19,7 @@ import { useRouter } from "next/navigation";
 import { useStudentForm } from "@/contexts/form-context";
 import Pdpa from "./pdpa";
 import { updateStudent } from "@/server/actions/student";
-import type { Student } from "@/generated/intania/auth/student/v1/student";
+import type { Student } from "@/server/db/types";
 
 const formSchema = z.object({
     pdpa: z.boolean().refine((value) => value, {

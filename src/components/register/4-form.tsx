@@ -45,7 +45,7 @@ import type {
     FamilyMemberStatus,
     FamilyStatus,
     Student,
-} from "@/generated/intania/auth/student/v1/student";
+} from "@/server/db/types";
 import { type BindingMapping } from "@/types/helper";
 
 const formSchema = z.object({

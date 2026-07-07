@@ -1,34 +1,11 @@
-import { redirect } from "next/navigation";
 import FormComponent1 from "@/components/register/1-form";
-import { cookies } from "next/headers";
-import { me } from "@/server/controller/auth";
-import { getCachedMapping } from "@/server/data/mapper";
+import { departments } from "@/data";
+import { requireStudent } from "@/server/require-student";
 
 export default async function Page() {
-    const sessionId = cookies().get("sid")?.value;
-    if (!sessionId) return redirect("/logout");
-
-    const meResponse = await me(sessionId);
-
-    if (!meResponse.success) {
-        const errors = meResponse.errors;
-        throw new Error(errors.join(", "));
-    }
-
-    const meData = meResponse.data;
-
-    if (!meData.student || !meData.account?.publicId) {
-        throw new Error("Something went wrong");
-    }
-
-    const miscData = await getCachedMapping(["departments"]);
-
-    const departments = miscData.departments;
+    const studentData = await requireStudent();
 
     return (
-        <FormComponent1
-            studentData={meData.student}
-            departments={departments}
-        />
+        <FormComponent1 studentData={studentData} departments={departments} />
     );
 }

@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useProfile } from "@/contexts/profile-context";
-import { type Student } from "@/generated/intania/auth/student/v1/student";
+import { type Student } from "@/server/db/types";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
 
@@ -14,6 +14,25 @@ interface HeaderProps {
 const Header: React.FC<HeaderProps> = ({ studentData }) => {
     const { isEditing, setIsEditing } = useProfile();
 
+    const thaiName = [
+        studentData.firstNameTh,
+        studentData.middleNameTh,
+        studentData.familyNameTh,
+    ]
+        .filter(Boolean)
+        .join(" ");
+    const englishName = [
+        studentData.firstNameEn,
+        studentData.middleNameEn,
+        studentData.familyNameEn,
+    ]
+        .filter(Boolean)
+        .join(" ");
+    const displayName =
+        [thaiName, englishName, studentData.studentId ?? ""].find(
+            (name) => name !== "",
+        ) ?? "";
+
     return (
         <Card className="p-6">
             <CardContent className="flex size-full flex-col items-center justify-between gap-5 p-0 sm:flex-row sm:items-end">
@@ -23,13 +42,7 @@ const Header: React.FC<HeaderProps> = ({ studentData }) => {
                     </div>
                     <div className="flex flex-col gap-1">
                         <h3 className="text-2xl font-semibold text-neutral-800">
-                            {studentData.firstNameTh
-                                ? `${studentData.firstNameTh} ${
-                                      studentData.middleNameTh ?? ""
-                                  } ${studentData.familyNameTh}`
-                                : `${studentData.firstNameEn} ${
-                                      studentData.middleNameEn ?? ""
-                                  } ${studentData.familyNameEn}`}
+                            {displayName}
                         </h3>
                         <h4 className="font-semibold text-primary">
                             {studentData.studentId}

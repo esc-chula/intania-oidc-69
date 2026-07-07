@@ -1,38 +1,35 @@
-"use client";
-
 import ESCLogoWithoutText from "@/components/esc/esc-logo-without-text";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import {
-    Form,
-    FormControl,
-    FormField,
-    FormItem,
-    FormLabel,
-    FormMessage,
-} from "../ui/form";
-import { loginStudent } from "@/server/actions/student";
-import { useState } from "react";
+import { signInWithGoogle } from "@/server/actions/auth";
 
-export const formSchema = z.object({
-    username: z.string().length(10),
-    password: z.string().min(2),
-});
+function GoogleIcon({ className }: { className?: string }) {
+    return (
+        <svg viewBox="0 0 24 24" className={className} aria-hidden="true">
+            <path
+                fill="#4285F4"
+                d="M23.52 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.46a5.52 5.52 0 0 1-2.4 3.62v3h3.88c2.27-2.09 3.58-5.17 3.58-8.81Z"
+            />
+            <path
+                fill="#34A853"
+                d="M12 24c3.24 0 5.96-1.07 7.94-2.91l-3.88-3.01c-1.07.72-2.45 1.15-4.06 1.15-3.13 0-5.78-2.11-6.72-4.95H1.27v3.11A12 12 0 0 0 12 24Z"
+            />
+            <path
+                fill="#FBBC05"
+                d="M5.28 14.28A7.22 7.22 0 0 1 4.9 12c0-.79.14-1.56.38-2.28V6.61H1.27a12 12 0 0 0 0 10.78l4.01-3.11Z"
+            />
+            <path
+                fill="#EA4335"
+                d="M12 4.77c1.76 0 3.34.61 4.59 1.8l3.44-3.44A11.97 11.97 0 0 0 12 0 12 12 0 0 0 1.27 6.61l4.01 3.11C6.22 6.88 8.87 4.77 12 4.77Z"
+            />
+        </svg>
+    );
+}
 
-export default function LoginBox() {
-    const form = useForm<z.infer<typeof formSchema>>({
-        resolver: zodResolver(formSchema),
-        defaultValues: {
-            username: "",
-            password: "",
-        },
-    });
-
-    const [error, setError] = useState<string | null>(null);
-
+export default function LoginBox({
+    errorMessage,
+}: {
+    errorMessage?: string | null;
+}) {
     return (
         <div className="relative flex size-full flex-col gap-16 rounded-2xl border-[#F5F5F5] p-12 md:aspect-[614/764] md:border-2 md:bg-card md:shadow-2xl lg:aspect-[1024/460] lg:grid-cols-2 lg:flex-row lg:p-14">
             <div className="flex w-full flex-col justify-between text-center md:text-start">
@@ -46,67 +43,27 @@ export default function LoginBox() {
                             INTANIA
                         </h1>
                         <p className="font-medium text-muted-foreground md:text-xl">
-                            ใช้รหัส CUNET เพื่อเข้าสู่ระบบ
+                            ใช้อีเมลนิสิตจุฬาฯ (@student.chula.ac.th)
+                            เพื่อเข้าสู่ระบบ
                         </p>
                     </div>
                 </div>
-                <p className="text-red-500">{error && error}</p>
+                <p className="text-red-500">{errorMessage}</p>
             </div>
-            <Form {...form}>
-                <form
-                    action={(formData) =>
-                        loginStudent(formData).catch((err: Error) => {
-                            setError(err.message);
-                        })
-                    }
-                    className="flex w-full flex-col items-center gap-5 lg:place-self-center"
+            <form
+                action={signInWithGoogle}
+                className="flex w-full flex-col items-center justify-center gap-5 lg:place-self-center"
+            >
+                <Button
+                    type="submit"
+                    size="lg"
+                    variant="outline"
+                    className="flex w-full max-w-sm items-center justify-center gap-3 py-6 text-base md:text-lg"
                 >
-                    <FormField
-                        control={form.control}
-                        name="username"
-                        render={({ field }) => (
-                            <FormItem className="flex w-full flex-col gap-2">
-                                <FormLabel className="text-muted-foreground">
-                                    รหัสนิสิต
-                                </FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="กรอกรหัสนิสิต"
-                                        {...field}
-                                    />
-                                </FormControl>
-                                <FormMessage className="text-xs" />
-                            </FormItem>
-                        )}
-                    />
-                    <FormField
-                        control={form.control}
-                        name="password"
-                        render={({ field }) => (
-                            <FormItem className="flex w-full flex-col gap-2">
-                                <FormLabel className="text-muted-foreground">
-                                    รหัสผ่าน
-                                </FormLabel>
-                                <FormControl>
-                                    <Input
-                                        placeholder="กรอกรหัสผ่าน"
-                                        {...field}
-                                        type="password"
-                                    />
-                                </FormControl>
-                                <FormMessage className="text-xs" />
-                            </FormItem>
-                        )}
-                    />
-                    <Button
-                        className="self-end text-base md:absolute md:bottom-12 md:right-12 md:text-xl lg:bottom-14 lg:right-14"
-                        size="lg"
-                        type="submit"
-                    >
-                        ถัดไป
-                    </Button>
-                </form>
-            </Form>
+                    <GoogleIcon className="h-5 w-5" />
+                    เข้าสู่ระบบด้วย Google
+                </Button>
+            </form>
         </div>
     );
 }
