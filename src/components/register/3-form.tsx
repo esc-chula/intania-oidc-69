@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useMemo, useState } from "react";
 import { updateStudent } from "@/server/actions/student";
 import { useStudentForm } from "@/contexts/form-context";
+import BackButton from "./back-button";
 import {
     type Country,
     type District,
@@ -919,14 +920,12 @@ export default function FormComponent3({
                         />
                     )}
 
-                    <Button
-                        type="submit"
-                        className="self-end"
-                        size="lg"
-                        disabled={loading}
-                    >
-                        ถัดไป
-                    </Button>
+                    <div className="flex items-center justify-between !border-t-0 !py-0">
+                        <BackButton />
+                        <Button type="submit" size="lg" disabled={loading}>
+                            ถัดไป
+                        </Button>
+                    </div>
                 </form>
             </Form>
         </Card>

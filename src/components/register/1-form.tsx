@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/navigation";
 import { useStudentForm } from "@/contexts/form-context";
+import BackButton from "./back-button";
 import Pdpa from "./pdpa";
 import { updateStudent } from "@/server/actions/student";
 import type { Student } from "@/server/db/types";
@@ -130,14 +131,12 @@ export default function FormComponent1({ studentData }: Props) {
                             )}
                         />
                     </div>
-                    <Button
-                        type="submit"
-                        className="self-end"
-                        size="lg"
-                        disabled={loading}
-                    >
-                        ถัดไป
-                    </Button>
+                    <div className="flex items-center justify-between !border-t-0 !py-0">
+                        <BackButton />
+                        <Button type="submit" size="lg" disabled={loading}>
+                            ถัดไป
+                        </Button>
+                    </div>
                 </form>
             </Form>
         </Card>

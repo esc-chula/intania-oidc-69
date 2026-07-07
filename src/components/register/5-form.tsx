@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/command";
 import { updateStudent } from "@/server/actions/student";
 import { useStudentForm } from "@/contexts/form-context";
+import BackButton from "./back-button";
 import type {
     FamilyMemberStatus,
     FamilyStatus,
@@ -683,14 +684,12 @@ export default function FormComponent5({
                             )}
                         />
                     </section>
-                    <Button
-                        type="submit"
-                        className="self-end"
-                        size="lg"
-                        disabled={loading}
-                    >
-                        ถัดไป
-                    </Button>
+                    <div className="flex items-center justify-between !border-t-0 !py-0">
+                        <BackButton />
+                        <Button type="submit" size="lg" disabled={loading}>
+                            ถัดไป
+                        </Button>
+                    </div>
                 </form>
             </Form>
         </Card>

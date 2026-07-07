@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import { updateStudent } from "@/server/actions/student";
 import { useStudentForm } from "@/contexts/form-context";
+import BackButton from "./back-button";
 import type { Student } from "@/server/db/types";
 import { z } from "zod";
 
@@ -256,14 +257,12 @@ export default function FormComponent4({ studentData }: Props) {
                             )}
                         />
                     </section>
-                    <Button
-                        type="submit"
-                        className="self-end"
-                        size="lg"
-                        disabled={loading}
-                    >
-                        ถัดไป
-                    </Button>
+                    <div className="flex items-center justify-between !border-t-0 !py-0">
+                        <BackButton />
+                        <Button type="submit" size="lg" disabled={loading}>
+                            ถัดไป
+                        </Button>
+                    </div>
                 </form>
             </Form>
         </Card>
