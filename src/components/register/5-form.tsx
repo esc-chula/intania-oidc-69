@@ -106,7 +106,7 @@ export default function FormComponent5({ studentData }: Props) {
                             render={({ field }) => (
                                 <FormItem>
                                     <FormLabel>
-                                        ชื่อ-นามสกุลผู้ปกครอง
+                                        ชื่อ-นามสกุล ผู้ปกครอง
                                         <span className="text-red-500">*</span>
                                     </FormLabel>
                                     <FormControl>
