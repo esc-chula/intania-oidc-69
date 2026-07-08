@@ -511,13 +511,24 @@ export default function FormComponent2({ studentData, departments }: Props) {
                                     </FormLabel>
                                     <Select
                                         value={
-                                            field.value != null
-                                                ? field.value.toString()
-                                                : undefined
+                                            departments.find(
+                                                (department) =>
+                                                    department.id ===
+                                                    field.value,
+                                            )?.nameTh
                                         }
-                                        onValueChange={(value) =>
-                                            field.onChange(Number(value))
-                                        }
+                                        onValueChange={(value) => {
+                                            const selectedDepartment =
+                                                departments.find(
+                                                    (department) =>
+                                                        department.nameTh ===
+                                                        value,
+                                                );
+                                            if (!selectedDepartment) return;
+                                            field.onChange(
+                                                selectedDepartment.id,
+                                            );
+                                        }}
                                     >
                                         <FormControl>
                                             <SelectTrigger>
@@ -528,7 +539,9 @@ export default function FormComponent2({ studentData, departments }: Props) {
                                             {departments.map((department) => (
                                                 <SelectItem
                                                     key={department.id}
-                                                    value={department.id.toString()}
+                                                    value={
+                                                        department.nameTh ?? ""
+                                                    }
                                                 >
                                                     {department.nameTh}
                                                 </SelectItem>
