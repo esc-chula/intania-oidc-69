@@ -71,6 +71,7 @@ export interface Student {
     shirtSize?: number | undefined;
     /** Social */
     email?: string | undefined;
+    chulaEmail?: string | undefined;
     emailVerified?: boolean | undefined;
     phoneNumber?: string | undefined;
     phoneNumberVerified?: boolean | undefined;

@@ -27,7 +27,8 @@ const geoRefSchema = new Schema(
 const studentSchema = new Schema<Student>(
     {
         studentId: { type: String, required: true, unique: true },
-        email: { type: String, required: true },
+        chulaEmail: { type: String, required: true },
+        email: String,
         emailVerified: Boolean,
         phoneNumber: String,
         phoneNumberVerified: Boolean,
@@ -80,6 +81,7 @@ const PROTECTED_FIELDS = [
     "createdAt",
     "updatedAt",
     "profilePictureKey",
+    "chulaEmail",
     "emailVerified",
     "phoneNumberVerified",
 ] as const;
@@ -98,7 +100,7 @@ export async function getOrCreateStudent(
     await connectDb();
     const doc = await StudentModel.findOneAndUpdate(
         { studentId },
-        { $setOnInsert: { studentId, email, emailVerified: true } },
+        { $setOnInsert: { studentId, chulaEmail: email, emailVerified: true } },
         { upsert: true, new: true },
     ).lean();
     return toPlain(doc);
