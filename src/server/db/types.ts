@@ -21,18 +21,6 @@ export interface Religion {
     nameEn?: string | undefined;
 }
 
-export interface FamilyStatus {
-    id: number;
-    valueTh?: string | undefined;
-    valueEn?: string | undefined;
-}
-
-export interface FamilyMemberStatus {
-    id: number;
-    valueTh?: string | undefined;
-    valueEn?: string | undefined;
-}
-
 export interface Province {
     id: number;
     nameTh?: string | undefined;
@@ -71,7 +59,6 @@ export interface Student {
     nicknameTh?: string | undefined;
     nicknameEn?: string | undefined;
     preferredPronoun?: string | undefined;
-    nationalId?: string | undefined;
     /** Personal data 2 */
     nationality?: Country | undefined;
     birthDate?: Date | undefined;
@@ -90,35 +77,16 @@ export interface Student {
     lineId?: string | undefined;
     facebook?: string | undefined;
     instagram?: string | undefined;
-    /** Family */
-    familyStatus?: FamilyStatus | undefined;
-    /** string enum: "Father", "Mother", "Other" */
+    /** Parent / emergency contact */
+    parentName?: string | undefined;
+    /** Relation to the student: "บิดา", "มารดา", or a free-text value */
     parent?: string | undefined;
-    siblingTotal?: number | undefined;
-    siblingOrder?: number | undefined;
     parentPhoneNumber?: string | undefined;
-    parentAddress?: string | undefined;
-    /** Father & Mother */
-    fatherName?: string | undefined;
-    fatherBirthYear?: number | undefined;
-    fatherStatus?: FamilyMemberStatus | undefined;
-    motherName?: string | undefined;
-    motherBirthYear?: number | undefined;
-    motherStatus?: FamilyMemberStatus | undefined;
-    /** Current address */
-    currentAddressNumber?: string | undefined;
-    currentAddressProvince?: Province | undefined;
-    currentAddressDistrict?: District | undefined;
-    currentAddressLatitude?: number | undefined;
-    currentAddressLongitude?: number | undefined;
-    currentAddressOther?: string | undefined;
-    /** Hometown address */
-    hometownAddressNumber?: string | undefined;
-    hometownAddressProvince?: Province | undefined;
-    hometownAddressDistrict?: District | undefined;
-    hometownAddressLatitude?: number | undefined;
-    hometownAddressLongitude?: number | undefined;
-    hometownAddressOther?: string | undefined;
+    /** Contact address ("ที่อยู่ที่สามารถติดต่อได้") */
+    contactAddressNumber?: string | undefined;
+    contactAddressProvince?: Province | undefined;
+    contactAddressDistrict?: District | undefined;
+    contactAddressOther?: string | undefined;
     /** Miscellaneous */
     cueaDataTransferAgreement?: boolean | undefined;
 }
