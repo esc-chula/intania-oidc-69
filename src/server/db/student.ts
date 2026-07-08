@@ -12,10 +12,6 @@ const countryRefSchema = new Schema(
     { id: Number, name: String, code: String },
     ref,
 );
-const valuedRefSchema = new Schema(
-    { id: Number, valueTh: String, valueEn: String },
-    ref,
-);
 const geoRefSchema = new Schema(
     {
         id: Number,
@@ -31,7 +27,8 @@ const geoRefSchema = new Schema(
 const studentSchema = new Schema<Student>(
     {
         studentId: { type: String, required: true, unique: true },
-        email: { type: String, required: true },
+        chulaEmail: { type: String, required: true },
+        email: String,
         emailVerified: Boolean,
         phoneNumber: String,
         phoneNumberVerified: Boolean,
@@ -48,7 +45,6 @@ const studentSchema = new Schema<Student>(
         nicknameTh: String,
         nicknameEn: String,
         preferredPronoun: String,
-        nationalId: String,
         nationality: countryRefSchema,
         birthDate: Date,
         religion: namedRefSchema,
@@ -61,30 +57,13 @@ const studentSchema = new Schema<Student>(
         lineId: String,
         facebook: String,
         instagram: String,
-        familyStatus: valuedRefSchema,
+        parentName: String,
         parent: String,
-        siblingTotal: Number,
-        siblingOrder: Number,
         parentPhoneNumber: String,
-        parentAddress: String,
-        fatherName: String,
-        fatherBirthYear: Number,
-        fatherStatus: valuedRefSchema,
-        motherName: String,
-        motherBirthYear: Number,
-        motherStatus: valuedRefSchema,
-        currentAddressNumber: String,
-        currentAddressProvince: geoRefSchema,
-        currentAddressDistrict: geoRefSchema,
-        currentAddressLatitude: Number,
-        currentAddressLongitude: Number,
-        currentAddressOther: String,
-        hometownAddressNumber: String,
-        hometownAddressProvince: geoRefSchema,
-        hometownAddressDistrict: geoRefSchema,
-        hometownAddressLatitude: Number,
-        hometownAddressLongitude: Number,
-        hometownAddressOther: String,
+        contactAddressNumber: String,
+        contactAddressProvince: geoRefSchema,
+        contactAddressDistrict: geoRefSchema,
+        contactAddressOther: String,
         cueaDataTransferAgreement: Boolean,
     },
     { timestamps: true },
@@ -102,6 +81,7 @@ const PROTECTED_FIELDS = [
     "createdAt",
     "updatedAt",
     "profilePictureKey",
+    "chulaEmail",
     "emailVerified",
     "phoneNumberVerified",
 ] as const;
@@ -120,7 +100,7 @@ export async function getOrCreateStudent(
     await connectDb();
     const doc = await StudentModel.findOneAndUpdate(
         { studentId },
-        { $setOnInsert: { studentId, email, emailVerified: true } },
+        { $setOnInsert: { studentId, chulaEmail: email, emailVerified: true } },
         { upsert: true, new: true },
     ).lean();
     return toPlain(doc);
