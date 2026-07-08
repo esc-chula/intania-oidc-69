@@ -57,7 +57,7 @@ export default function FormComponent5({ studentData }: Props) {
         mode: "onChange",
     });
 
-    // Drives the relation Select; the free-text input shows when OTHER_RELATION.
+    // Drives the relation Select and whether the free-text input is shown.
     const [relationChoice, setRelationChoice] = useState<string>("");
 
     useEffect(() => {
@@ -132,6 +132,12 @@ export default function FormComponent5({ studentData }: Props) {
                                     <Select
                                         value={relationChoice}
                                         onValueChange={(value) => {
+                                            // Radix fires onValueChange("") to
+                                            // "clear" a controlled value whose
+                                            // item isn't mounted (dropdown
+                                            // closed). Ignore that so the
+                                            // prefilled relation isn't wiped.
+                                            if (!value) return;
                                             setRelationChoice(value);
                                             field.onChange(
                                                 value === OTHER_RELATION
@@ -142,7 +148,18 @@ export default function FormComponent5({ studentData }: Props) {
                                     >
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="เลือกความสัมพันธ์" />
+                                                {/* Render the label ourselves:
+                                                    Radix SelectValue does not
+                                                    reliably resolve a value set
+                                                    programmatically (prefill) to
+                                                    its item text. */}
+                                                {relationChoice ? (
+                                                    <span>
+                                                        {relationChoice}
+                                                    </span>
+                                                ) : (
+                                                    <SelectValue placeholder="เลือกความสัมพันธ์" />
+                                                )}
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
