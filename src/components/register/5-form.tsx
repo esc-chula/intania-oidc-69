@@ -154,7 +154,9 @@ export default function FormComponent5({ studentData }: Props) {
                                                     programmatically (prefill) to
                                                     its item text. */}
                                                 {relationChoice ? (
-                                                    <span>{relationChoice}</span>
+                                                    <span>
+                                                        {relationChoice}
+                                                    </span>
                                                 ) : (
                                                     <SelectValue placeholder="เลือกความสัมพันธ์" />
                                                 )}
