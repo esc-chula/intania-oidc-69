@@ -1,6 +1,12 @@
 import type { Department } from "@/server/db/types";
 
 // รายชื่อภาควิชา/หลักสูตร คณะวิศวกรรมศาสตร์ จุฬาฯ — แก้ไขรายการได้ที่ไฟล์นี้
+//
+// APPEND-ONLY: each `id` is a stable key persisted in student records
+// (student.department.id). Only ADD new entries with a fresh id. Never change,
+// reorder, or reuse an existing id — doing so silently remaps already-saved
+// student records to the wrong department. departments.test.ts locks the
+// id -> code mapping to catch accidental renumbering.
 export const departments: Department[] = [
     {
         id: 0,
