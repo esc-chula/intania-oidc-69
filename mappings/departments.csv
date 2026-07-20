@@ -1,0 +1,23 @@
+﻿id,code,nameTh,nameEn
+0,-,วิศวกรรมศาสตร์ (ภาครวม),General Engineering
+1,CE,วิศวกรรมโยธา,Civil Engineering
+2,EE,วิศวกรรมไฟฟ้า,Electrical Engineering
+3,ME,วิศวกรรมเครื่องกล,Mechanical Engineering
+4,AE,วิศวกรรมยานยนต์,Automotive Engineering
+5,IE,วิศวกรรมอุตสาหการ,Industrial Engineering
+6,CHE,วิศวกรรมเคมี,Chemical Engineering
+7,MN,วิศวกรรมทรัพยากรธรณีและเหมืองแร่,Mining and Petroleum Engineering
+8,PE,วิศวกรรมปิโตรเลียม,Petroleum Engineering
+9,ENV,วิศวกรรมสิ่งแวดล้อม,Environmental Engineering
+10,SV,วิศวกรรมสำรวจ,Survey Engineering
+11,MT,วิศวกรรมโลหการและวัสดุ,Metallurgical and Materials Engineering
+12,CP,วิศวกรรมคอมพิวเตอร์,Computer Engineering
+13,CEDT,วิศวกรรมคอมพิวเตอร์และเทคโนโลยีดิจิทัล (CEDT),Computer Engineering and Digital Technology
+14,NE,วิศวกรรมนิวเคลียร์และรังสี,Nuclear Engineering
+15,NANO,วิศวกรรมนาโน (NANO),Nano Engineering
+16,ADME,วิศวกรรมการออกแบบและการผลิตยานยนต์ (ADME),Automotive Design and Manufacturing Engineering
+17,ICE,วิศวกรรมสารสนเทศและการสื่อสาร (ICE),Information and Communication Engineering
+18,AERO,วิศวกรรมอากาศยาน (AERO),Aerospace Engineering
+19,AI,วิศวกรรมหุ่นยนต์และปัญญาประดิษฐ์ (Robotics AI),Robotics and Artificial Intelligence Engineering
+20,ChPE,วิศวกรรมเคมีและกระบวนการ (ChPE),Chemical and Process Engineering
+21,SEMI,วิศวกรรมเซมิคอนดักเตอร์ (SEMI),Semiconductor Engineering
